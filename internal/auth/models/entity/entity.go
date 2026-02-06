@@ -12,7 +12,6 @@ type User struct {
 	Username      string `gorm:"uniqueIndex;not null"`
 	Email         string `gorm:"unique" `
 	Password      string `gorm:"not null" `
-	Role          string `gorm:"default:admin" `
 }
 
 func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
