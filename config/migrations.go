@@ -8,6 +8,7 @@ import (
 func RunMigrations() {
 	database := GetDB()
 
+	//Arrange all table structures in one interface for maintainance
 	tables := []interface{}{
 		entity.User{},
 	}
