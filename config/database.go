@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	database *gorm.DB
+	Database *gorm.DB
 	once     sync.Once
 )
 
@@ -27,7 +27,7 @@ func LoadDB() {
 		}
 
 		var err error
-		database, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+		Database, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 		if err != nil {
 			log.Fatal("Failed to connect to database:", err)
 		}
@@ -38,8 +38,8 @@ func LoadDB() {
 
 // GetDB returns the database connection
 func GetDB() *gorm.DB {
-	if database == nil {
+	if Database == nil {
 		log.Fatal("Database not initialized. Call LoadDB() first")
 	}
-	return database
+	return Database
 }

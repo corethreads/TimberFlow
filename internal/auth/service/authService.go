@@ -2,25 +2,27 @@ package service
 
 import (
 	"errors"
+	"os"
 	"server/internal/auth/helpers"
 	"server/internal/auth/models/dto"
 	"server/internal/auth/models/entity"
 	"server/internal/auth/repository"
 	"server/internal/auth/types"
 	"server/internal/auth/utils"
+	"time"
 
 	"github.com/google/uuid"
 )
 
-type authService struct {
+type AuthService struct {
 	useRepo *repository.UserRepository
 }
 
-func NewauthService(userepo *repository.UserRepository) *authService {
-	return &authService{useRepo: userepo}
+func NewauthService(userepo *repository.UserRepository) *AuthService {
+	return &AuthService{useRepo: userepo}
 }
 
-func (s *authService) createUser(request dto.RequestDTO) (*entity.User, error) {
+func (s *AuthService) CreateUser(request dto.RequestDTO) (*dto.ResponseDTO, error) {
 	//TODO check if user typed requests
 	if !helpers.HasRequiredFields(&request) {
 		return nil, types.NothinginFields
@@ -35,8 +37,9 @@ func (s *authService) createUser(request dto.RequestDTO) (*entity.User, error) {
 	if err != nil {
 		return nil, errors.New("Hash Not created")
 	}
-	//Todo add user to Database
+	//Todo add user to Storage Database
 	user := &entity.User{
+		ID:            uuid.New().String(),
 		Business_ID:   uuid.New().String(),
 		Business_Name: request.BusinessName,
 		Username:      request.Username,
@@ -44,8 +47,31 @@ func (s *authService) createUser(request dto.RequestDTO) (*entity.User, error) {
 		Password:      hashedPassword,
 	}
 
-	if err := s.useRepo.CreateUser(user); err == nil {
+	if err := s.useRepo.CreateUser(user); err != nil {
 		return nil, errors.New("User Not created")
 	}
+
+	//Generate JWT for user for further usage
+	secretkey := os.Getenv("JWT_SECRET")
+	expiry := 3 * time.Hour
+
+	jwtToken, err := utils.Generatejwt(secretkey, user.ID, user.Email, expiry)
+	if err != nil {
+		return nil, err
+	}
+
+	//Generate Response for User
+	response := &dto.ResponseDTO{
+		Token: jwtToken,
+		User: dto.Response{
+			ID:            user.ID,
+			BusinessID:    user.Business_ID,
+			Business_name: user.Business_Name,
+			Username:      user.Username,
+			Email:         user.Email,
+		},
+	}
+
+	return response, nil
 
 }
